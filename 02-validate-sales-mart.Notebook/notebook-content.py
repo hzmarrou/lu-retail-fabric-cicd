@@ -22,28 +22,81 @@
 
 # CELL ********************
 
-# Welcome to your new notebook
-# Type here in the cell editor to add code!
 from pyspark.sql import functions as F
 
+# Load the tables created by 01-build-sales-mart
 detail = spark.table("retail_sales_detail")
 summary = spark.table("retail_sales_summary")
 
-checks = [
-    ("detail_has_rows", detail.count() > 0, str(detail.count())),
-    ("summary_has_rows", summary.count() > 0, str(summary.count())),
-    ("no_null_order_ids", detail.filter(F.col("order_id").isNull()).count() == 0,
-     str(detail.filter(F.col("order_id").isNull()).count())),
-    ("sales_are_positive", detail.filter(F.col("sales_amount") <= 0).count() == 0,
-     str(detail.filter(F.col("sales_amount") <= 0).count())),
-    ("only_completed_orders_loaded", detail.count() == 9, str(detail.count()))
-]
+# Calculate reusable validation values
+detail_count = detail.count()
+summary_count = summary.count()
 
-validation = spark.createDataFrame(
-    [(name, bool(passed), observed) for name, passed, observed in checks],
-    ["check_name", "passed", "observed_value"]
+null_order_count = (
+    detail
+    .filter(F.col("order_id").isNull())
+    .count()
 )
 
+non_positive_sales_count = (
+    detail
+    .filter(F.col("sales_amount") <= 0)
+    .count()
+)
+
+countries = {
+    row["country"]
+    for row in detail.select("country").distinct().collect()
+}
+
+# Define the data-quality checks
+checks = [
+    (
+        "detail_has_rows",
+        detail_count > 0,
+        str(detail_count)
+    ),
+    (
+        "summary_has_rows",
+        summary_count > 0,
+        str(summary_count)
+    ),
+    (
+        "no_null_order_ids",
+        null_order_count == 0,
+        str(null_order_count)
+    ),
+    (
+        "sales_are_positive",
+        non_positive_sales_count == 0,
+        str(non_positive_sales_count)
+    ),
+    (
+        "expected_detail_rows",
+        detail_count == 7,
+        str(detail_count)
+    ),
+    (
+        "only_france_and_spain",
+        countries == {"France", "Spain"},
+        str(sorted(countries))
+    )
+]
+
+# Convert the validation results into a DataFrame
+validation = spark.createDataFrame(
+    [
+        (name, bool(passed), observed)
+        for name, passed, observed in checks
+    ],
+    [
+        "check_name",
+        "passed",
+        "observed_value"
+    ]
+)
+
+# Save the validation results as a Delta table
 (
     validation.write
     .mode("overwrite")
@@ -51,12 +104,23 @@ validation = spark.createDataFrame(
     .saveAsTable("retail_validation_results")
 )
 
+# Display the results
 display(validation)
 
-failed_count = validation.filter(F.col("passed") == False).count()
+# Stop the CI/CD process if any validation fails
+failed_count = (
+    validation
+    .filter(F.col("passed") == False)
+    .count()
+)
 
 if failed_count > 0:
-    raise Exception(f"Data-quality validation failed: {failed_count} check(s) failed")
+    raise Exception(
+        f"Data-quality validation failed: "
+        f"{failed_count} check(s) failed"
+    )
+
+print("All data-quality checks passed.")
 
 # METADATA ********************
 

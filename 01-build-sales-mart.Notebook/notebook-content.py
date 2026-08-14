@@ -52,7 +52,15 @@ orders = (
     .withColumn("quantity", F.col("quantity").cast(IntegerType()))
 )
 
-completed_orders = orders.filter(F.col("status") == "Completed")
+allowed_countries = ["France", "Spain"]
+
+completed_orders = (
+    orders
+    .filter(F.col("status") == "Completed")
+    .join(customers.select("customer_id", "country"), "customer_id", "inner")
+    .filter(F.col("country").isin(allowed_countries))
+    .drop("country")
+)
 
 sales_detail = (
     completed_orders

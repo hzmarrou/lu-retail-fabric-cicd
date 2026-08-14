@@ -1,0 +1,140 @@
+name: Fabric Retail Promotion
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: fabric-retail-promotion-main
+  cancel-in-progress: false
+
+jobs:
+  deploy-acc:
+    name: Deploy, build, and validate Acc
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Acquire Fabric token
+        id: fabric-auth
+        shell: pwsh
+        run: |
+          $body = @{
+            client_id     = "${{ secrets.FABRIC_CLIENT_ID }}"
+            client_secret = "${{ secrets.FABRIC_CLIENT_SECRET }}"
+            scope         = "https://api.fabric.microsoft.com/.default"
+            grant_type    = "client_credentials"
+          }
+
+          $response = Invoke-RestMethod `
+            -Uri "https://login.microsoftonline.com/${{ secrets.FABRIC_TENANT_ID }}/oauth2/v2.0/token" `
+            -Method POST `
+            -Body $body `
+            -ContentType "application/x-www-form-urlencoded"
+
+          if (-not $response.access_token) {
+            throw "Failed to acquire Fabric token"
+          }
+
+          Write-Host "::add-mask::$($response.access_token)"
+          "token=$($response.access_token)" >> $env:GITHUB_OUTPUT
+
+      - name: Deploy Dev to Acc
+        shell: pwsh
+        env:
+          FABRIC_TOKEN: ${{ steps.fabric-auth.outputs.token }}
+        run: |
+          & ./scripts/DeploymentPipelines-DeployAll.ps1 `
+            -deploymentPipelineName "${{ vars.DEPLOYMENT_PIPELINE_NAME }}" `
+            -sourceStageName "${{ vars.DEV_STAGE_NAME }}" `
+            -targetStageName "${{ vars.ACC_STAGE_NAME }}" `
+            -deploymentNote "Automatic Dev to Acc after main update"
+
+      - name: Build sales mart in Acc
+        shell: pwsh
+        env:
+          FABRIC_TOKEN: ${{ steps.fabric-auth.outputs.token }}
+        run: |
+          & ./scripts/Run-FabricNotebook.ps1 `
+            -deploymentPipelineName "${{ vars.DEPLOYMENT_PIPELINE_NAME }}" `
+            -targetStageName "${{ vars.ACC_STAGE_NAME }}" `
+            -notebookName "${{ vars.BUILD_NOTEBOOK_NAME }}"
+
+      - name: Validate sales mart in Acc
+        shell: pwsh
+        env:
+          FABRIC_TOKEN: ${{ steps.fabric-auth.outputs.token }}
+        run: |
+          & ./scripts/Run-FabricNotebook.ps1 `
+            -deploymentPipelineName "${{ vars.DEPLOYMENT_PIPELINE_NAME }}" `
+            -targetStageName "${{ vars.ACC_STAGE_NAME }}" `
+            -notebookName "${{ vars.VALIDATION_NOTEBOOK_NAME }}"
+
+  deploy-prod:
+    name: Approve, deploy, build, and validate Prod
+    needs: deploy-acc
+    runs-on: windows-latest
+    environment: Prod
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Acquire Fabric token
+        id: fabric-auth
+        shell: pwsh
+        run: |
+          $body = @{
+            client_id     = "${{ secrets.FABRIC_CLIENT_ID }}"
+            client_secret = "${{ secrets.FABRIC_CLIENT_SECRET }}"
+            scope         = "https://api.fabric.microsoft.com/.default"
+            grant_type    = "client_credentials"
+          }
+
+          $response = Invoke-RestMethod `
+            -Uri "https://login.microsoftonline.com/${{ secrets.FABRIC_TENANT_ID }}/oauth2/v2.0/token" `
+            -Method POST `
+            -Body $body `
+            -ContentType "application/x-www-form-urlencoded"
+
+          if (-not $response.access_token) {
+            throw "Failed to acquire Fabric token"
+          }
+
+          Write-Host "::add-mask::$($response.access_token)"
+          "token=$($response.access_token)" >> $env:GITHUB_OUTPUT
+
+      - name: Deploy Acc to Prod
+        shell: pwsh
+        env:
+          FABRIC_TOKEN: ${{ steps.fabric-auth.outputs.token }}
+        run: |
+          & ./scripts/DeploymentPipelines-DeployAll.ps1 `
+            -deploymentPipelineName "${{ vars.DEPLOYMENT_PIPELINE_NAME }}" `
+            -sourceStageName "${{ vars.ACC_STAGE_NAME }}" `
+            -targetStageName "${{ vars.PROD_STAGE_NAME }}" `
+            -deploymentNote "Approved Acc to Prod promotion"
+
+      - name: Build sales mart in Prod
+        shell: pwsh
+        env:
+          FABRIC_TOKEN: ${{ steps.fabric-auth.outputs.token }}
+        run: |
+          & ./scripts/Run-FabricNotebook.ps1 `
+            -deploymentPipelineName "${{ vars.DEPLOYMENT_PIPELINE_NAME }}" `
+            -targetStageName "${{ vars.PROD_STAGE_NAME }}" `
+            -notebookName "${{ vars.BUILD_NOTEBOOK_NAME }}"
+
+      - name: Validate sales mart in Prod
+        shell: pwsh
+        env:
+          FABRIC_TOKEN: ${{ steps.fabric-auth.outputs.token }}
+        run: |
+          & ./scripts/Run-FabricNotebook.ps1 `
+            -deploymentPipelineName "${{ vars.DEPLOYMENT_PIPELINE_NAME }}" `
+            -targetStageName "${{ vars.PROD_STAGE_NAME }}" `
+            -notebookName "${{ vars.VALIDATION_NOTEBOOK_NAME }}"

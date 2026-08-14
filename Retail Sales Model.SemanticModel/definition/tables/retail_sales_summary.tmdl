@@ -1,0 +1,67 @@
+table retail_sales_summary
+	lineageTag: 0422dfbb-9f04-495e-b5c3-c55b0f9165b7
+	sourceLineageTag: [dbo].[retail_sales_summary]
+
+	column country
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: cb7f68b7-4ed6-4ec8-a6b7-aa750460f331
+		sourceLineageTag: country
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column category
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 15dede60-a768-4585-a16f-98a8e529c9cc
+		sourceLineageTag: category
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_count
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: c0335865-88bb-41fb-95ae-abf89d259465
+		sourceLineageTag: order_count
+		summarizeBy: sum
+		sourceColumn: order_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column units_sold
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: b4950bca-66dd-4ee1-842f-360f86c3a271
+		sourceLineageTag: units_sold
+		summarizeBy: sum
+		sourceColumn: units_sold
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_sales
+		dataType: double
+		sourceProviderType: decimal(34, 2)
+		lineageTag: 560e5259-5fab-4446-83f3-c78e45edcfc6
+		sourceLineageTag: total_sales
+		summarizeBy: sum
+		sourceColumn: total_sales
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition retail_sales_summary = entity
+		mode: directLake
+		source
+			entityName: retail_sales_summary
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,140 @@
+table retail_sales_detail
+	lineageTag: 74eb1f85-63c6-47c9-a4a8-b6bb7b588127
+	sourceLineageTag: [dbo].[retail_sales_detail]
+
+	column order_id
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a0ee4e07-78e5-4523-89cb-cd2d743cd8d7
+		sourceLineageTag: order_id
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_date
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: date
+		lineageTag: e8d512cc-d5d6-4375-9f6f-a85ec251b1d8
+		sourceLineageTag: order_date
+		summarizeBy: none
+		sourceColumn: order_date
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a6097e99-da3e-4a46-b2db-505499cb23ee
+		sourceLineageTag: customer_id
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_name
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 132cef5a-c0c9-4df1-9bff-1c506136fc68
+		sourceLineageTag: customer_name
+		summarizeBy: none
+		sourceColumn: customer_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column country
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7cccafb4-3e42-433d-82db-5d9f064f4ed9
+		sourceLineageTag: country
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column segment
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a88bdd2d-2bcb-4dd3-a653-e90b85c4cbe0
+		sourceLineageTag: segment
+		summarizeBy: none
+		sourceColumn: segment
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 2c93a0d8-dcc7-4469-8694-4aef88d10196
+		sourceLineageTag: product_id
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_name
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 7ea1da09-6ead-4ada-8e1c-ea17dc01a5c1
+		sourceLineageTag: product_name
+		summarizeBy: none
+		sourceColumn: product_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column category
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 69af1b14-4437-41b3-9910-2a047f3c5ca2
+		sourceLineageTag: category
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantity
+		dataType: int64
+		formatString: 0
+		sourceProviderType: int
+		lineageTag: 19c17a38-92db-4faa-b880-e760c05cf943
+		sourceLineageTag: quantity
+		summarizeBy: sum
+		sourceColumn: quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit_price
+		dataType: decimal
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		sourceProviderType: decimal(12, 2)
+		lineageTag: fcfd1994-eb62-49de-9dd1-59ac000f6a68
+		sourceLineageTag: unit_price
+		summarizeBy: sum
+		sourceColumn: unit_price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column sales_amount
+		dataType: double
+		sourceProviderType: decimal(23, 2)
+		lineageTag: f7cef8d0-53fa-45fa-9728-78b9b7ce1fa9
+		sourceLineageTag: sales_amount
+		summarizeBy: sum
+		sourceColumn: sales_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition retail_sales_detail = entity
+		mode: directLake
+		source
+			entityName: retail_sales_detail
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
+

@@ -74,6 +74,20 @@ jobs:
             -targetStageName "${{ vars.ACC_STAGE_NAME }}" `
             -notebookName "${{ vars.VALIDATION_NOTEBOOK_NAME }}"
 
+      - name: Rebind and refresh Acc semantic model
+        shell: pwsh
+        env:
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+        run: |
+          & ./scripts/Rebind-SemanticModel.ps1 `
+            -workspaceId "${{ vars.ACC_WORKSPACE_ID }}" `
+            -modelName "${{ vars.SEMANTIC_MODEL_NAME }}" `
+            -targetServer "${{ vars.ACC_SQL_ENDPOINT_SERVER }}" `
+            -targetDatabase "${{ vars.ACC_SQL_ENDPOINT_DB_ID }}" `
+            -Refresh
+
   deploy-prod:
     name: Approve, deploy, build, and validate Prod
     needs: deploy-acc
@@ -138,3 +152,17 @@ jobs:
             -deploymentPipelineName "${{ vars.DEPLOYMENT_PIPELINE_NAME }}" `
             -targetStageName "${{ vars.PROD_STAGE_NAME }}" `
             -notebookName "${{ vars.VALIDATION_NOTEBOOK_NAME }}"
+
+      - name: Rebind and refresh Prod semantic model
+        shell: pwsh
+        env:
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+          FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+        run: |
+          & ./scripts/Rebind-SemanticModel.ps1 `
+            -workspaceId "${{ vars.PROD_WORKSPACE_ID }}" `
+            -modelName "${{ vars.SEMANTIC_MODEL_NAME }}" `
+            -targetServer "${{ vars.PROD_SQL_ENDPOINT_SERVER }}" `
+            -targetDatabase "${{ vars.PROD_SQL_ENDPOINT_DB_ID }}" `
+            -Refresh

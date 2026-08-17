@@ -52,8 +52,8 @@ orders = (
     .withColumn("quantity", F.col("quantity").cast(IntegerType()))
 )
 
-# allowed_countries = ["France", "Spain"]
-allowed_countries = ["France", "Spain", "Germany"]
+allowed_countries = ["France", "Spain"]
+# allowed_countries = ["France", "Spain", "Germany"]
 
 completed_orders = (
     orders

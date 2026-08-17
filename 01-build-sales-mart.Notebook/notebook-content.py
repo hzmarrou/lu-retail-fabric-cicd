@@ -52,7 +52,8 @@ orders = (
     .withColumn("quantity", F.col("quantity").cast(IntegerType()))
 )
 
-allowed_countries = ["France", "Spain"]
+# allowed_countries = ["France", "Spain"]
+allowed_countries = ["France", "Spain", "Germany"]
 
 completed_orders = (
     orders
@@ -89,7 +90,8 @@ sales_summary = (
     .agg(
         F.countDistinct("order_id").alias("order_count"),
         F.sum("quantity").alias("units_sold"),
-        F.round(F.sum("sales_amount"), 2).alias("total_sales")
+        F.round(F.sum("sales_amount"), 2).alias("total_sales"),
+        F.round(F.avg("sales_amount"), 2).alias("avg_order_value")   # <-- NEW
     )
 )
 
@@ -102,13 +104,13 @@ sales_summary = (
 
 (
     sales_summary.write
+    .option("overwriteSchema", "true")
     .mode("overwrite")
     .format("delta")
     .saveAsTable("retail_sales_summary")
 )
 
 display(sales_summary.orderBy(F.desc("total_sales")))
-
 
 # METADATA ********************
 

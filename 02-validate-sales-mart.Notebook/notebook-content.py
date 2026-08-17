@@ -49,6 +49,10 @@ countries = {
     for row in detail.select("country").distinct().collect()
 }
 
+# Cross-table consistency: total units in detail must equal total units in summary
+detail_units = detail.agg(F.sum("quantity")).first()[0]
+summary_units = summary.agg(F.sum("units_sold")).first()[0]
+
 # Define the data-quality checks
 checks = [
     (
@@ -72,13 +76,13 @@ checks = [
         str(non_positive_sales_count)
     ),
     (
-        "expected_detail_rows",
-        detail_count == 7,
-        str(detail_count)
+        "units_match_between_tables",
+        detail_units == summary_units,
+        f"detail={detail_units}, summary={summary_units}"
     ),
     (
-        "only_france_and_spain",
-        countries == {"France", "Spain"},
+        "only_expected_countries",
+        countries == {"France", "Spain", "Germany"},
         str(sorted(countries))
     )
 ]

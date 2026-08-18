@@ -82,8 +82,8 @@ checks = [
     ),
     (
         "only_expected_countries",
-        countries == {"France", "Spain"},
-        # countries == {"France", "Spain", "Germany"},
+        # countries == {"France", "Spain"},
+        countries == {"France"},
         str(sorted(countries))
     )
 ]
